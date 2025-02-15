@@ -13,9 +13,12 @@ import { BankAccountDTO } from 'src/Services/bank-account/dto/bankAccountDTO';
 import { BankAccountService } from './../../Services/bank-account/bank-account.service';
 import { UpdateStatusDTO } from 'src/Services/bank-account/dto/update-statusDTO';
 import { UpdateEmailDTO } from 'src/Services/bank-account/dto/update-emailDTO';
+import { AmountDTO } from 'src/Services/bank-account/dto/amountDTO';
 import { ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AccountStatus } from '@prisma/client';
+import { Decimal } from 'decimal.js';
+import { IsNotEmpty } from 'class-validator';
 
 @Controller('bank-account')
 export class BankAccountController {
@@ -31,38 +34,54 @@ export class BankAccountController {
     }
 
     @Get('findByNumber/:accountNumber')
-    async findByNumber(@Param('accountNumber') accountNumber: string, @Res() res: Response) {
-        const account = await this.bankAccountService.findAccount(accountNumber);
-    
+    async findByNumber(
+        @Param('accountNumber') accountNumber: string,
+        @Res() res: Response,
+    ) {
+        const account =
+            await this.bankAccountService.findAccount(accountNumber);
+
         if (!account) {
-            return res.status(HttpStatus.NOT_FOUND).send('Conta não encontrada');
+            return res
+                .status(HttpStatus.NOT_FOUND)
+                .send('Conta não encontrada');
         }
 
         const { Balance, ...accountWithoutBalance } = account;
-    
+
         return res.status(HttpStatus.OK).json(accountWithoutBalance);
     }
-    
+
     @Get('findByBranch/:branch')
-    async findAllByBranch(@Param('branch') branch: string, @Res() res: Response) {
+    async findAllByBranch(
+        @Param('branch') branch: string,
+        @Res() res: Response,
+    ) {
         const accounts = await this.bankAccountService.findByBranch(branch);
         if (accounts.length == 0) {
-            return res.status(HttpStatus.NOT_FOUND).send('Nenhuma conta encontrada');
+            return res
+                .status(HttpStatus.NOT_FOUND)
+                .send('Nenhuma conta encontrada');
         }
         return res.status(HttpStatus.OK).json(accounts);
     }
 
     @Get('findByHolder/:document')
-    async findByHolder(@Param('document') document: string, @Res() res: Response) {
+    async findByHolder(
+        @Param('document') document: string,
+        @Res() res: Response,
+    ) {
         const accounts = await this.bankAccountService.findByHolder(document);
         if (!accounts.length) {
-            return res.status(HttpStatus.NOT_FOUND).send('Nenhuma conta encontrada para esse titular');
+            return res
+                .status(HttpStatus.NOT_FOUND)
+                .send('Nenhuma conta encontrada para esse titular');
         }
         return res.status(HttpStatus.OK).json(accounts);
     }
 
     @Patch('updateEmail/:accountNumber')
-    @ApiParam({ name: 'accountNumber'})
+    @ApiParam({ name: 'accountNumber' })
     @ApiBody({
         type: UpdateEmailDTO,
     })
@@ -73,59 +92,90 @@ export class BankAccountController {
     ) {
         const { email } = updateEmailDto;
 
-        const account = await this.bankAccountService.findAccount(accountNumber);
+        const account =
+            await this.bankAccountService.findAccount(accountNumber);
         if (!account) {
-            return res.status(HttpStatus.NOT_FOUND).send('Conta não encontrada');
+            return res
+                .status(HttpStatus.NOT_FOUND)
+                .send('Conta não encontrada');
         }
 
         try {
-            const updated = await this.bankAccountService.updateEmail(accountNumber, email);
+            const updated = await this.bankAccountService.updateEmail(
+                accountNumber,
+                email,
+            );
             return res.status(HttpStatus.OK).json(updated);
         } catch (error) {
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('Erro ao atualizar o email');
+            return res
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .send('Erro ao atualizar o email');
         }
     }
 
     @Patch(':accountNumber/status')
-    @ApiParam({ name: 'accountNumber', description: 'Número da conta bancária' })
+    @ApiParam({
+        name: 'accountNumber',
+        description: 'Número da conta bancária',
+    })
     @ApiBody({
         type: UpdateStatusDTO,
     })
     async updateStatus(
         @Param('accountNumber') accountNumber: string,
         @Body('status') status: AccountStatus,
-        @Res() res: Response
+        @Res() res: Response,
     ) {
         if (!Object.values(AccountStatus).includes(status)) {
             return res.status(HttpStatus.BAD_REQUEST).send('Status inválido.');
         }
 
-        return await this.bankAccountService.updateStatus(accountNumber, status);
+        return await this.bankAccountService.updateStatus(
+            accountNumber,
+            status,
+        );
     }
 
     @Get(':accountNumber/balance')
-    async getBalance(@Param('accountNumber') accountNumber: string, @Res() res: Response) {
-      const account = await this.bankAccountService.findAccount(accountNumber);
-    
-      if (!account || !account.Balance) {
-        return res.status(HttpStatus.NOT_FOUND).send('Conta ou saldo não encontrado');
-      }
-    
-      return res.status(HttpStatus.OK).json({
-        availableAmount: account.Balance.availableAmount,
-        blockedAmount: account.Balance.blockedAmount,
-      });
+    async getBalance(
+        @Param('accountNumber') accountNumber: string,
+        @Res() res: Response,
+    ) {
+        const account =
+            await this.bankAccountService.findAccount(accountNumber);
+
+        if (!account || !account.Balance) {
+            return res
+                .status(HttpStatus.NOT_FOUND)
+                .send('Conta ou saldo não encontrado');
+        }
+
+        return res.status(HttpStatus.OK).json({
+            availableAmount: account.Balance.availableAmount,
+            blockedAmount: account.Balance.blockedAmount,
+        });
     }
 
     @Patch(':accountNumber/hold')
-    async holdAmount(@Param('accountNumber') accountNumber: string, @Body('amount') amount: number, @Res() res: Response) {
+    @ApiParam({ name: 'accountNumber', description: 'Número da conta bancária' })
+    @ApiBody({ type: AmountDTO })
+    async holdAmount(
+        @Param('accountNumber') accountNumber: string,
+        @Body() amountDto: AmountDTO,
+        @Res() res: Response
+    ) {
         try {
+            const decimalAmount = new Decimal(amountDto.amount);
+
+            if (!decimalAmount.isPositive()) {
+                return res.status(HttpStatus.BAD_REQUEST).send('Amount must be a positive number');
+            }
+
             const account = await this.bankAccountService.findAccount(accountNumber);
             if (!account) {
                 return res.status(HttpStatus.NOT_FOUND).send('Conta não encontrada');
             }
-
-            const updatedAccount = await this.bankAccountService.holdAmount(accountNumber, amount);
+            const updatedAccount = await this.bankAccountService.holdAmount(accountNumber, decimalAmount.toNumber());
             return res.status(HttpStatus.OK).json(updatedAccount);
         } catch (error) {
             return res.status(HttpStatus.BAD_REQUEST).send(error.message);
@@ -133,26 +183,46 @@ export class BankAccountController {
     }
     
     @Patch(':accountNumber/release')
-    async releaseAmount(@Param('accountNumber') accountNumber: string, @Body('amount') amount: number, @Res() res: Response) {
+    @ApiParam({ name: 'accountNumber', description: 'Número da conta bancária' })
+    @ApiBody({ type: AmountDTO })
+    async releaseAmount(
+        @Param('accountNumber') accountNumber: string,
+        @Body() amountDto: AmountDTO,
+        @Res() res: Response
+    ) {
         try {
+            const decimalAmount = new Decimal(amountDto.amount);
+
+            if (!decimalAmount.isPositive()) {
+                return res.status(HttpStatus.BAD_REQUEST).send('Amount must be a positive number');
+            }
+
             const account = await this.bankAccountService.findAccount(accountNumber);
             if (!account) {
                 return res.status(HttpStatus.NOT_FOUND).send('Conta não encontrada');
             }
-            
-            const updatedAccount = await this.bankAccountService.releaseAmount(accountNumber, amount);
+
+            const updatedAccount = await this.bankAccountService.releaseAmount(accountNumber, decimalAmount.toNumber());
             return res.status(HttpStatus.OK).json(updatedAccount);
         } catch (error) {
             return res.status(HttpStatus.BAD_REQUEST).send(error.message);
         }
     }
-    
+
     @Delete(':accountNumber')
-    async closeAccount(@Param('accountNumber') accountNumber: string, @Res() res: Response) {
-        const closed = await this.bankAccountService.closeAccount(accountNumber);
+    async closeAccount(
+        @Param('accountNumber') accountNumber: string,
+        @Res() res: Response,
+    ) {
+        const closed =
+            await this.bankAccountService.closeAccount(accountNumber);
         if (!closed) {
-            return res.status(HttpStatus.NOT_FOUND).send('Conta não encontrada');
+            return res
+                .status(HttpStatus.NOT_FOUND)
+                .send('Conta não encontrada');
         }
         return res.status(HttpStatus.OK).send('Conta encerrada com sucesso');
     }
+
+
 }
