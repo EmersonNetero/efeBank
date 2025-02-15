@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   api:
     build: .
@@ -10,6 +8,7 @@ services:
       - .:/home/node/nest
     depends_on:
       - "rabbitmq"
+      - "mysql"
 
   rabbitmq:
     image: "rabbitmq:3.8-management-alpine"
@@ -22,12 +21,31 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=admin
       - RABBITMQ_DEFAULT_PASS=admin
-    
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: "300m"
+
+  mysql:
+    image: "mysql:8.0"
+    container_name: nest_msg_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=EFEbank
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - default
 
 volumes:
   postgres:
     driver: local
   rabbitmq:
+    driver: local
+  mysql:
     driver: local
 
 networks:
