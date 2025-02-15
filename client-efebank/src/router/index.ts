@@ -11,7 +11,7 @@ const routes = [
   { path: "/about", name: "About", component: AboutView },
   { path: "/createAccount", name: "CreateAccount", component: CreateAccount},
   { path: "/bankAccount", name: "BankAccount", component: Accounts},
-  {path: "/:bankAccount/details", name: "AccountDetails", component: AccountDetails}
+  {path: "/bankAccount/details/:accountNumber", name: "AccountDetails", component: AccountDetails}
 ];
 
 const router = createRouter({
