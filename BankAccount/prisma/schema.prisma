@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model BankAccounts {
+  id             Int       @id @default(autoincrement())
+  branch         String    @db.VarChar(10)
+  number         String    @db.VarChar(10) @unique
+  type           AccountType
+  holderName     String    @db.VarChar(200)
+  holderEmail    String    @db.VarChar(200)
+  holderDocument String
+  holderType     HolderType
+  status         AccountStatus
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  Balance        Balances?
+  Transactions   Transactions[]
+}
+
+model Balances {
+  bankAccountId   Int    @id
+  availableAmount Decimal
+  blockedAmount   Decimal
+
+  BankAccount     BankAccounts @relation(fields: [bankAccountId], references: [id])
+}
+
+model Transactions {
+  id                        Int       @id @default(autoincrement())
+  type                      TransactionType
+  amount                    Decimal   @db.Decimal(16, 2)
+  bankAccountId             Int
+  counterpartyBankCode      String    @db.VarChar(3)
+  counterpartyBankName      String
+  counterpartyBranch        String
+  counterpartyAccountNumber String
+  counterpartyAccountType   AccountType
+  counterpartyHolderName    String
+  counterpartyHolderType    HolderType
+  counterpartyHolderDocument String
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  BankAccount               BankAccounts @relation(fields: [bankAccountId], references: [id])
+}
+
+enum AccountType {
+  PAYMENT  
+  CURRENT  
+}
+
+enum HolderType {
+  NATURAL  
+  LEGAL    
+}
+
+enum AccountStatus {
+  ACTIVE    
+  BLOCKED   
+  FINISHED  
+}
+
+enum TransactionType {
+  CREDIT         
+  DEBIT          
+  AMOUNT_HOLD    
+  AMOUNT_RELEASE 
+}
