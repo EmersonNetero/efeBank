@@ -1,5 +1,6 @@
 import { $Enums } from '@prisma/client';
-import { IsString, IsEmail, IsEnum } from 'class-validator';
+import { IsString, IsEmail, IsEnum, IsOptional } from 'class-validator';
+import { AccountStatus } from '@prisma/client';
 
 export class BankAccountDTO {
     @IsString()
@@ -20,6 +21,6 @@ export class BankAccountDTO {
     @IsEnum($Enums.HolderType)
     holderType: $Enums.HolderType;
 
-    @IsEnum($Enums.AccountStatus)
-    status: $Enums.AccountStatus;
+    @IsEnum(AccountStatus)
+    status: AccountStatus = AccountStatus.ACTIVE;
 }

@@ -29,6 +29,10 @@ async function bootstrap() {
         new ValidationPipe({ transform: true, whitelist: true }),
     );
     await app.startAllMicroservices();
+
+    app.enableCors();
+
+
     await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
