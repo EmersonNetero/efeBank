@@ -64,9 +64,7 @@ export class BankAccountController {
                 .send('Conta não encontrada');
         }
 
-        const { Balance, ...accountWithoutBalance } = account;
-
-        return res.status(HttpStatus.OK).json(accountWithoutBalance);
+        return res.status(HttpStatus.OK).json(account);
     }
 
     @Get('findByBranch/:branch')
