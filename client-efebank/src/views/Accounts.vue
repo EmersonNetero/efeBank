@@ -11,6 +11,7 @@ interface Conta {
   holderType: string;
   holderDocument: string;
   status: string;
+  number: string;
 }
 
 const contas = ref<Conta[]>([]);
@@ -28,7 +29,7 @@ const getAllAccounts = async () => {
 
 
 const goToDetails = (conta: Conta) => {
-  router.push(`/bankAccount/details/${conta.holderDocument}`);
+  router.push(`/bankAccount/details/${conta.number}`);
 };
 
 onMounted(() => {

@@ -9,13 +9,13 @@
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>Nome do Titular:</v-list-item-title>
-                    <v-list-item-subtitle>{{ conta.nome }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>{{ conta.holderName }}</v-list-item-subtitle>
                   </v-list-item-content>
                 </v-list-item>
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>Email:</v-list-item-title>
-                    <v-text-field v-model="conta.email" :disabled="!editandoEmail" label="Email" />
+                    <v-text-field v-model="conta.holderEmail" :disabled="!editandoEmail" label="Email" />
                   </v-list-item-content>
                   <v-btn v-if="!editandoEmail" @click="editandoEmail = true">Editar</v-btn>
                   <v-btn v-if="editandoEmail" @click="salvarEmail">Salvar</v-btn>
@@ -23,7 +23,7 @@
                 <v-list-item>
                   <v-list-item-content>
                     <v-list-item-title>Saldo:</v-list-item-title>
-                    <v-list-item-subtitle>R$ {{ conta.saldo.toFixed(2) }}</v-list-item-subtitle>
+                    <v-list-item-subtitle>R$ {{ conta.balance.toFixed(2) }}</v-list-item-subtitle>
                   </v-list-item-content>
                 </v-list-item>
               </v-list>
@@ -47,27 +47,27 @@
   
   const route = useRoute();
   const router = useRouter();
-  const conta = ref({ nome: '', email: '', saldo: 0 });
+  const conta = ref({holderName: '', holderEmail: '', balance: 0 });
   const editandoEmail = ref(false);
   
   onMounted(async () => {
-    const { id } = route.params;
-    const response = await axios.get(`http://localhost:3000/contas/${id}`);
+    const { accountNumber } = route.params;
+    const response = await axios.get(`https://cult-nov-hh-bored.trycloudflare.com/bank-account/findByNumber/${accountNumber}`);
     conta.value = response.data;
   });
   
   const salvarEmail = async () => {
-    await axios.put(`http://localhost:3000/contas/${route.params.id}`, { email: conta.value.email });
+    await axios.put(`http://localhost:3000/contas/${route.params.accountNumber}`, { email: conta.value.holderEmail });
     editandoEmail.value = false;
   };
   
   const bloquearConta = async () => {
-    await axios.post(`http://localhost:3000/contas/${route.params.id}/bloquear`);
+    await axios.post(`http://localhost:3000/contas/${route.params.accountNumber}/bloquear`);
     alert('Conta bloqueada!');
   };
   
   const encerrarConta = async () => {
-    await axios.post(`http://localhost:3000/contas/${route.params.id}/encerrar`);
+    await axios.post(`http://localhost:3000/contas/${route.params.accountNumber}/encerrar`);
     alert('Conta encerrada!');
     router.push('/');
   };
@@ -75,7 +75,7 @@
   const bloquearSaldo = async () => {
     const quantia = prompt('Digite o valor a ser bloqueado:');
     if (quantia) {
-      await axios.post(`http://localhost:3000/contas/${route.params.id}/bloquear-saldo`, { valor: parseFloat(quantia) });
+      await axios.post(`http://localhost:3000/contas/${route.params.accountNumber}/bloquear-saldo`, { valor: parseFloat(quantia) });
       alert('Quantia bloqueada!');
     }
   };
@@ -83,7 +83,7 @@
   const desbloquearSaldo = async () => {
     const quantia = prompt('Digite o valor a ser desbloqueado:');
     if (quantia) {
-      await axios.post(`http://localhost:3000/contas/${route.params.id}/desbloquear-saldo`, { valor: parseFloat(quantia) });
+      await axios.post(`http://localhost:3000/contas/${route.params.accountNumber}/desbloquear-saldo`, { valor: parseFloat(quantia) });
       alert('Quantia desbloqueada!');
     }
   };
