@@ -18,7 +18,7 @@ export class BankAccountService {
         await this.prisma.balances.create({
           data: {
             bankAccountId: bankAccount.id,
-            availableAmount: 0, 
+            availableAmount: 2000, 
             blockedAmount: 0,
           },
         });
