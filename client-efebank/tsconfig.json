@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "module": "ESNext", // Alterar para ESNext, adequado para Vue 3
+    "target": "ESNext", // Manter ESNext como alvo de transpilação
+    "moduleResolution": "Node", // Resolução de módulos no estilo Node.js
+    "lib": ["dom", "esnext"], // Incluir bibliotecas para DOM e ESNext
+    "esModuleInterop": true, // Permitir importação de módulos CommonJS no estilo ES
+    "allowSyntheticDefaultImports": true, // Permitir importações de default
+    "jsx": "preserve", // Manter JSX para posterior compilação
+    "strict": true, // Habilitar verificações estritas no TypeScript
+    "skipLibCheck": true, // Ignorar checagens de tipos nas bibliotecas
+    "resolveJsonModule": true, // Permitir importação de arquivos JSON
+    "noEmit": true, // Não gerar arquivos de saída, apenas para verificação de tipo
+    "isolatedModules": true, // Tratar arquivos como módulos isolados
+    "baseUrl": "./src", // Definir base URL para o diretório src
+    "paths": {
+      "@/*": ["src/*"] // Alias para facilitar importações dentro do diretório src
+    }
+  },
+  "include": [
+    "src/**/*.ts", // Incluir arquivos TypeScript (.ts)
+    "src/**/*.d.ts", // Incluir arquivos de definição de tipo (.d.ts)
+    "src/**/*.tsx", // Incluir arquivos TypeScript com JSX
+    "src/**/*.vue" // Incluir arquivos Vue (.vue)
+  ],
+  "exclude": [
+    "node_modules", // Excluir node_modules
+    "dist" // Excluir diretórios de saída
+  ]
+}
