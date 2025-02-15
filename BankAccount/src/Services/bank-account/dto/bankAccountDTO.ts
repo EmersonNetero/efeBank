@@ -1,5 +1,6 @@
 import { $Enums } from '@prisma/client';
 import { IsString, IsEmail, IsEnum } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class BankAccountDTO {
     @IsString()
@@ -23,3 +24,5 @@ export class BankAccountDTO {
     @IsEnum($Enums.AccountStatus)
     status: $Enums.AccountStatus;
 }
+
+
